@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTasks } from '../context/TaskContext'
 import { useTemplates } from '../context/TemplateContext'
 import { usePomodoro } from '../context/PomodoroContext'
-import { ListTodo, CheckCircle2, Clock, AlertCircle, Timer, ArrowRight, Plus, Pencil, FileText } from 'lucide-react'
+import { ListTodo, CheckCircle2, Clock, AlertCircle, CalendarX, ArrowRight, Plus, Pencil, FileText } from 'lucide-react'
 import TodayWidget from '../components/TodayWidget'
 import WeekCalendar from '../components/WeekCalendar'
 import UpcomingDeadlines from '../components/UpcomingDeadlines'
@@ -17,7 +17,7 @@ import { CATEGORY_MAP, PRIORITY_MAP } from '../utils/constants'
 export default function DashboardPage() {
   const { tasks, toggleTask, addTask, editTask, deleteTask } = useTasks()
   const { addTemplate } = useTemplates()
-  const { startFocus, completedToday } = usePomodoro()
+  const { startFocus } = usePomodoro()
   const navigate = useNavigate()
   const [showForm, setShowForm] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
@@ -47,7 +47,7 @@ export default function DashboardPage() {
   }
 
   async function saveTaskAsTemplate(task) {
-    const name = prompt('Nome do template:')
+    const name = prompt('Nome da tarefa modelo:')
     if (!name?.trim()) return
     await addTemplate({
       name: name.trim(),
@@ -71,7 +71,8 @@ export default function DashboardPage() {
       if (t.completed) return false
       return isOverdue(t.dueDate, t.dueTime)
     }).length
-    return { total, completed, pending, overdue }
+    const noDate = tasks.filter((t) => !t.completed && !t.dueDate).length
+    return { total, completed, pending, overdue, noDate }
   }, [tasks])
 
   const todayTasks = useMemo(() => {
@@ -135,11 +136,12 @@ export default function DashboardPage() {
           to="/tarefas?filter=overdue"
         />
         <StatCard
-          icon={Timer}
-          label="Foco Hoje"
-          value={completedToday}
-          color="text-green-500"
-          bg="bg-green-50 dark:bg-green-900/30"
+          icon={CalendarX}
+          label="Sem Prazo"
+          value={stats.noDate}
+          color="text-slate-500"
+          bg="bg-slate-50 dark:bg-gray-700/50"
+          to="/tarefas?filter=no-date"
         />
       </div>
 
@@ -262,7 +264,7 @@ function TaskRow({ task, onToggle, onEdit, onViewDetail, onSaveTemplate }) {
         <button
           onClick={() => onSaveTemplate(task)}
           className="p-1 rounded text-slate-300 dark:text-gray-600 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 opacity-0 group-hover:opacity-100 transition-all"
-          title="Salvar como template"
+          title="Salvar como tarefa modelo"
         >
           <FileText className="w-3.5 h-3.5" />
         </button>

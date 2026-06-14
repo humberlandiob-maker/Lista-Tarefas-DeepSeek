@@ -95,6 +95,12 @@ export function getNextRecurringDate(currentDueDate, rule) {
     case 'weekly':
       date.setDate(date.getDate() + 7)
       break
+    case 'weekdays':
+      date.setDate(date.getDate() + 1)
+      while (date.getDay() === 0 || date.getDay() === 6) {
+        date.setDate(date.getDate() + 1)
+      }
+      break
     case 'monthly':
       date.setMonth(date.getMonth() + 1)
       break

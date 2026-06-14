@@ -1,11 +1,7 @@
-import { useMemo } from 'react'
-import { format, isToday, parseISO } from 'date-fns'
+import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { CheckCircle2, Clock, AlertCircle, Sun, Moon } from 'lucide-react'
+import { Sun, Moon } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { useTasks } from '../context/TaskContext'
-import { isOverdue } from '../utils/helpers'
-import ProgressBar from './ProgressBar'
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -16,25 +12,13 @@ function getGreeting() {
 
 export default function TodayWidget() {
   const { displayName } = useAuth()
-  const { tasks } = useTasks()
-
-  const todayTasks = useMemo(() => {
-    return tasks.filter((t) => {
-      if (!t.dueDate) return false
-      return isToday(parseISO(t.dueDate))
-    })
-  }, [tasks])
-
-  const todayCompleted = todayTasks.filter((t) => t.completed).length
-  const todayPending = todayTasks.filter((t) => !t.completed).length
-  const overdueCount = tasks.filter((t) => isOverdue(t.dueDate, t.dueTime)).length
 
   const greeting = getGreeting()
   const GreetIcon = greeting.icon
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-5">
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
           <GreetIcon className="w-5 h-5 text-amber-500" />
         </div>
@@ -47,29 +31,6 @@ export default function TodayWidget() {
           </p>
         </div>
       </div>
-
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="flex items-center gap-2 text-sm">
-          <CheckCircle2 className="w-4 h-4 text-green-500" />
-          <span className="text-slate-600 dark:text-gray-400">{todayCompleted} concluídas</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <Clock className="w-4 h-4 text-amber-500" />
-          <span className="text-slate-600 dark:text-gray-400">{todayPending} pendentes</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <AlertCircle className="w-4 h-4 text-red-500" />
-          <span className="text-slate-600 dark:text-gray-400">{overdueCount} atrasadas</span>
-        </div>
-      </div>
-
-      {todayTasks.length > 0 && (
-        <ProgressBar
-          value={todayCompleted}
-          max={todayTasks.length}
-          label="Progresso do dia"
-        />
-      )}
     </div>
   )
 }

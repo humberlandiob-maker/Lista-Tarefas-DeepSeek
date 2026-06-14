@@ -12,6 +12,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { CATEGORY_MAP } from '../utils/constants'
 import TaskCard from './TaskCard'
 import EmptyState from './EmptyState'
 
@@ -48,7 +49,22 @@ function SortableTaskCard({ task, subtasks, onToggle, onDelete, onToggleRemind, 
   )
 }
 
-export default function TaskList({ tasks, onToggle, onDelete, onToggleRemind, onReorder, onEdit, onViewDetail }) {
+function TaskCardSimple({ task, subtasks, onToggle, onDelete, onToggleRemind, onEdit, onToggleSubtask, onViewDetail }) {
+  return (
+    <TaskCard
+      task={task}
+      subtasks={subtasks}
+      onToggle={onToggle}
+      onDelete={onDelete}
+      onToggleRemind={onToggleRemind}
+      onEdit={onEdit}
+      onToggleSubtask={onToggleSubtask}
+      onViewDetail={onViewDetail}
+    />
+  )
+}
+
+export default function TaskList({ tasks, onToggle, onDelete, onToggleRemind, onReorder, onEdit, onViewDetail, groupByCategory }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   )
@@ -67,6 +83,17 @@ export default function TaskList({ tasks, onToggle, onDelete, onToggleRemind, on
     return { parents: pars, subtaskMap: subs }
   }, [tasks])
 
+  const groupedParents = useMemo(() => {
+    if (!groupByCategory) return null
+    const groups = {}
+    for (const t of parents) {
+      const cat = t.category || 'outros'
+      if (!groups[cat]) groups[cat] = []
+      groups[cat].push(t)
+    }
+    return groups
+  }, [parents, groupByCategory])
+
   const handleDragEnd = useCallback((event) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
@@ -84,6 +111,43 @@ export default function TaskList({ tasks, onToggle, onDelete, onToggleRemind, on
 
   if (parents.length === 0) {
     return <EmptyState />
+  }
+
+  if (groupByCategory && groupedParents) {
+    return (
+      <div className="space-y-6">
+        {Object.entries(groupedParents).map(([category, catTasks]) => {
+          const cat = CATEGORY_MAP[category] || { label: category, color: '#6B7280' }
+          catTasks.sort((a, b) => a.completed - b.completed)
+          return (
+            <div key={category}>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-3" style={{ backgroundColor: cat.color + '15' }}>
+                <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+                <span className="text-sm font-semibold uppercase tracking-wider" style={{ color: cat.color }}>
+                  {cat.label}
+                </span>
+                <span className="text-xs ml-auto" style={{ color: cat.color + '99' }}>{catTasks.length} tarefa{catTasks.length !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="space-y-3">
+                {catTasks.map((task) => (
+                  <TaskCardSimple
+                    key={task.id}
+                    task={task}
+                    subtasks={subtaskMap[task.id] || []}
+                    onToggle={onToggle}
+                    onDelete={onDelete}
+                    onToggleRemind={onToggleRemind}
+                    onEdit={onEdit}
+                    onToggleSubtask={onToggle}
+                    onViewDetail={onViewDetail}
+                  />
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
   }
 
   return (

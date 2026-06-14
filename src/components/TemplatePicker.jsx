@@ -11,7 +11,7 @@ export default function TemplatePicker({ templates, onSelect, onClose }) {
         <div className="flex items-center justify-between px-6 pt-6 pb-3">
           <h2 className="text-lg font-semibold text-slate-800 dark:text-gray-100 flex items-center gap-2">
             <FileText className="w-5 h-5 text-blue-500" />
-            Escolher template
+            Escolher tarefa modelo
           </h2>
           <button
             onClick={onClose}
@@ -24,7 +24,7 @@ export default function TemplatePicker({ templates, onSelect, onClose }) {
         <div className="px-6 pb-4">
           {templates.length === 0 ? (
             <p className="text-sm text-slate-400 dark:text-gray-500 text-center py-8">
-              Nenhum template criado ainda.
+              Nenhuma tarefa modelo criada ainda.
             </p>
           ) : (
             <div className="space-y-2 max-h-80 overflow-y-auto">

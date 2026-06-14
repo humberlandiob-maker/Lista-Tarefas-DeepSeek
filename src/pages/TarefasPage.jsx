@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Plus, List, Columns, FileText } from 'lucide-react'
+import { Plus, FileText } from 'lucide-react'
 import { useTasks } from '../context/TaskContext'
 import { useTemplates } from '../context/TemplateContext'
 import { usePomodoro } from '../context/PomodoroContext'
@@ -10,7 +10,6 @@ import { isOverdue, isDueToday } from '../utils/helpers'
 import FilterBar from '../components/FilterBar'
 import SearchBar from '../components/SearchBar'
 import TaskList from '../components/TaskList'
-import KanbanBoard from '../components/KanbanBoard'
 import TaskForm from '../components/TaskForm'
 import TaskDetailModal from '../components/TaskDetailModal'
 import TemplatePicker from '../components/TemplatePicker'
@@ -40,6 +39,8 @@ function applyFilter(tasks, filter, dayDate) {
       return tasks.filter((t) => !t.completed && t.remindMe)
     case 'overdue':
       return tasks.filter((t) => !t.completed && isOverdue(t.dueDate, t.dueTime))
+    case 'no-date':
+      return tasks.filter((t) => !t.dueDate)
     case 'pending':
       return tasks.filter((t) => !t.completed)
     case 'completed':
@@ -66,7 +67,6 @@ export default function TarefasPage() {
   function setFilter(value) {
     setSearchParams(value === 'all' ? {} : { filter: value }, { replace: true })
   }
-  const [view, setView] = useState('list')
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
@@ -133,65 +133,39 @@ export default function TarefasPage() {
   }
 
   return (
-    <div className={view === 'list' ? 'max-w-2xl mx-auto px-4 py-8' : 'px-4 py-8'}>
-      <div className={view === 'list' ? '' : 'max-w-4xl mx-auto'}>
-        <FilterBar tasks={tasks} active={filter} onChange={setFilter} allTags={allTags} />
+    <div className="max-w-2xl mx-auto px-4 py-8">
+      <FilterBar tasks={tasks} active={filter} onChange={setFilter} allTags={allTags} />
 
-        <div className="flex items-center justify-between gap-3 mt-3 mb-4">
-          <div className="flex-1">
-            <SearchBar value={search} onChange={setSearch} />
-          </div>
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-gray-700 rounded-lg p-0.5">
-            <button
-              onClick={() => setView('list')}
-              className={`p-2 rounded-md text-sm transition-colors ${
-                view === 'list' ? 'bg-white dark:bg-gray-600 text-blue-600 shadow-sm' : 'text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300'
-              }`}
-              title="Visualização em lista"
-            >
-              <List className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setView('kanban')}
-              className={`p-2 rounded-md text-sm transition-colors ${
-                view === 'kanban' ? 'bg-white dark:bg-gray-600 text-blue-600 shadow-sm' : 'text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300'
-              }`}
-              title="Visualização em kanban"
-            >
-              <Columns className="w-4 h-4" />
-            </button>
-          </div>
-          <button
-            onClick={() => setShowTemplatePicker(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-400 text-sm font-medium hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap"
-          >
-            <FileText className="w-4 h-4" />
-            <span className="hidden sm:inline">Template</span>
-          </button>
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 transition-colors whitespace-nowrap"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Nova Tarefa</span>
-          </button>
+      <div className="flex items-center justify-between gap-3 mt-3 mb-4">
+        <div className="flex-1">
+          <SearchBar value={search} onChange={setSearch} />
         </div>
-
-        {view === 'kanban' ? (
-          <KanbanBoard tasks={filteredTasks} onToggle={toggleTask} />
-        ) : (
-          <TaskList
-            tasks={filteredTasks}
-            onToggle={toggleTask}
-            onDelete={deleteTask}
-            onToggleRemind={toggleRemind}
-            onReorder={handleReorder}
-            onEdit={handleEditClick}
-            onViewDetail={(task) => setDetailTask(task)}
-          />
-        )}
+        <button
+          onClick={() => setShowTemplatePicker(true)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-400 text-sm font-medium hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap"
+        >
+          <FileText className="w-4 h-4" />
+          <span className="hidden sm:inline">Tarefa Modelo</span>
+        </button>
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 transition-colors whitespace-nowrap"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">Nova Tarefa</span>
+        </button>
       </div>
 
+      <TaskList
+        tasks={filteredTasks}
+        onToggle={toggleTask}
+        onDelete={deleteTask}
+        onToggleRemind={toggleRemind}
+        onReorder={handleReorder}
+        onEdit={handleEditClick}
+        onViewDetail={(task) => setDetailTask(task)}
+        groupByCategory={true}
+      />
       {showTemplatePicker && (
         <TemplatePicker
           templates={templates}
@@ -218,7 +192,7 @@ export default function TarefasPage() {
           onEdit={(task) => { setDetailTask(null); handleEditClick(task) }}
           onToggleSubtask={toggleTask}
           onSaveTemplate={(task) => {
-            const name = prompt('Nome do template:')
+            const name = prompt('Nome da tarefa modelo:')
             if (name?.trim()) addTemplate({
               name: name.trim(),
               title: task.title,

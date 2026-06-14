@@ -436,7 +436,7 @@ export default function ConfiguracoesPage() {
 
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Templates</h2>
+          <h2 className="text-sm font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Tarefas Modelo</h2>
           <button
             onClick={() => setShowTemplateNew(!showTemplateNew)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500 text-white text-xs font-medium hover:bg-blue-600 transition-colors"
@@ -451,7 +451,7 @@ export default function ConfiguracoesPage() {
               type="text"
               value={templateNewName}
               onChange={(e) => setTemplateNewName(e.target.value)}
-              placeholder="Nome do template"
+              placeholder="Nome da tarefa modelo"
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
             <input
@@ -490,7 +490,7 @@ export default function ConfiguracoesPage() {
 
         <div className="space-y-2">
           {templates.length === 0 && (
-            <p className="text-sm text-slate-400 dark:text-gray-500 text-center py-4">Nenhum template criado</p>
+            <p className="text-sm text-slate-400 dark:text-gray-500 text-center py-4">Nenhuma tarefa modelo criada</p>
           )}
           {templates.map((t) => {
             const cat = t.category

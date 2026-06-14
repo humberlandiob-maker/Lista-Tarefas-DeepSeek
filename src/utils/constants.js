@@ -17,6 +17,7 @@ export const FILTERS = [
   { value: 'urgent', label: 'Urgentes' },
   { value: 'reminders', label: 'Lembretes' },
   { value: 'overdue', label: 'Atrasadas' },
+  { value: 'no-date', label: 'Sem Data' },
   { value: 'pending', label: 'Pendentes' },
   { value: 'completed', label: 'Concluídas' },
 ]
@@ -33,6 +34,7 @@ export const REPEAT_OPTIONS = [
   { value: null, label: 'Não repetir' },
   { value: 'daily', label: 'Diariamente' },
   { value: 'weekly', label: 'Semanalmente' },
+  { value: 'weekdays', label: 'Dias úteis (seg-sex)' },
   { value: 'monthly', label: 'Mensalmente' },
   { value: 'yearly', label: 'Anualmente' },
 ]

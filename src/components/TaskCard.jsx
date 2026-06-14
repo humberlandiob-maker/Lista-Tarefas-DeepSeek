@@ -104,7 +104,7 @@ export default function TaskCard({ task, onToggle, onDelete, onToggleRemind, onE
           {task.repeatRule && (
             <span className="inline-flex items-center gap-1 text-xs text-slate-400 dark:text-gray-500">
               <RefreshCw className="w-3 h-3" />
-              {task.repeatRule === 'daily' ? 'Diária' : task.repeatRule === 'weekly' ? 'Semanal' : task.repeatRule === 'monthly' ? 'Mensal' : 'Anual'}
+              {task.repeatRule === 'daily' ? 'Diária' : task.repeatRule === 'weekly' ? 'Semanal' : task.repeatRule === 'weekdays' ? 'Dias úteis' : task.repeatRule === 'monthly' ? 'Mensal' : 'Anual'}
             </span>
           )}
           {hasChildren && (
@@ -142,7 +142,7 @@ export default function TaskCard({ task, onToggle, onDelete, onToggleRemind, onE
             </span>
           )}
 
-          {task.dueDate && (
+          {task.dueDate ? (
             <span
               className={`inline-flex items-center gap-1 text-xs ${
                 overdue ? 'text-red-500 font-medium' : dueToday ? 'text-amber-500 font-medium' : 'text-slate-400 dark:text-gray-500'
@@ -152,6 +152,10 @@ export default function TaskCard({ task, onToggle, onDelete, onToggleRemind, onE
               {formatDateTime(task.dueDate, task.dueTime)}
               {overdue && ' (Atrasada)'}
               {dueToday && ' (Hoje)'}
+            </span>
+          ) : !task.completed && (
+            <span className="inline-flex items-center text-xs text-slate-400 dark:text-gray-500">
+              Sem prazo
             </span>
           )}
         </div>

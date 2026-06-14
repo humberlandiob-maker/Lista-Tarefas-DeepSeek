@@ -7,39 +7,15 @@ import { useAuth } from '../context/AuthContext'
 import * as pomodorosService from '../services/pomodoros'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
-  LineChart, Line,
 } from 'recharts'
 import { format, startOfWeek, addDays, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-
-const COLORS = ['#3B82F6', '#22C55E', '#A855F7', '#F59E0B', '#EF4444', '#EC4899']
-
-const RADIAN = Math.PI / 180
-
-function renderPieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) {
-  const radius = outerRadius * 1.35
-  const x = cx + radius * Math.cos(-midAngle * RADIAN)
-  const y = cy + radius * Math.sin(-midAngle * RADIAN)
-  return (
-    <text x={x} y={y} fill="#64748b" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" className="text-xs font-medium">
-      {name} ({(percent * 100).toFixed(0)}%)
-    </text>
-  )
-}
 
 export default function AnalisesPage() {
   const { tasks } = useTasks()
   const { completedToday } = usePomodoro()
   const { user } = useAuth()
   const [pomodoroWeek, setPomodoroWeek] = useState([])
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   useEffect(() => {
     if (!user) return
@@ -156,16 +132,19 @@ export default function AnalisesPage() {
 
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-5">
           <h2 className="text-sm font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-4">Tarefas por Prioridade</h2>
-          <ResponsiveContainer width="100%" height={isMobile ? 300 : 260}>
-            <PieChart margin={{ top: 20, right: 40, bottom: 20, left: 40 }} style={{ overflow: 'visible' }}>
-              <Pie data={priorityData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={isMobile ? 65 : 90} label={renderPieLabel} labelLine>
-                {priorityData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+          <div className="space-y-3">
+            {priorityData.map((pri) => (
+              <div key={pri.name}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-slate-600 dark:text-gray-400">{pri.name}</span>
+                  <span className="text-slate-400 dark:text-gray-500">{pri.value}</span>
+                </div>
+                <div className="h-2 rounded-full bg-slate-100 dark:bg-gray-700 overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${Math.min((pri.value / Math.max(...priorityData.map((p) => p.value), 1)) * 100, 100)}%`, backgroundColor: pri.color }} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

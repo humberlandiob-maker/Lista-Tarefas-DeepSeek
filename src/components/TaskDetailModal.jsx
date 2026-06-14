@@ -147,7 +147,7 @@ export default function TaskDetailModal({ task, subtasks, onClose, onToggle, onD
                 className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-gray-700 text-sm font-medium text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-gray-600 transition-colors"
               >
                 <FileText className="w-4 h-4" />
-                Template
+                Tarefa Modelo
               </button>
             )}
             <button

@@ -123,6 +123,41 @@ export default function TaskForm({ onClose, onSubmit, initialData }) {
             />
           </div>
 
+          {!isEditing && !isSubtask && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Subtarefas</label>
+              <div className="space-y-2">
+                {subtaskTitles.map((st, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-gray-600 flex-shrink-0" />
+                    <input
+                      type="text"
+                      value={st}
+                      onChange={(e) => updateSubtaskTitle(i, e.target.value)}
+                      placeholder={`Subtarefa ${i + 1}`}
+                      className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeSubtaskField(i)}
+                      className="p-1.5 rounded-lg text-slate-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={addSubtaskField}
+                className="mt-2 flex items-center gap-1.5 text-sm text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Adicionar subtarefa
+              </button>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Categoria</label>
@@ -226,41 +261,6 @@ export default function TaskForm({ onClose, onSubmit, initialData }) {
 
           <TagInput allTags={allTags} selectedIds={selectedTagIds} onChange={setSelectedTagIds} />
 
-          {!isEditing && !isSubtask && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Subtarefas</label>
-              <div className="space-y-2">
-                {subtaskTitles.map((st, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-gray-600 flex-shrink-0" />
-                    <input
-                      type="text"
-                      value={st}
-                      onChange={(e) => updateSubtaskTitle(i, e.target.value)}
-                      placeholder={`Subtarefa ${i + 1}`}
-                      className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeSubtaskField(i)}
-                      className="p-1.5 rounded-lg text-slate-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={addSubtaskField}
-                className="mt-2 flex items-center gap-1.5 text-sm text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Adicionar subtarefa
-              </button>
-            </div>
-          )}
-
           <div className="pt-2 space-y-3 border-t border-slate-100 dark:border-gray-700">
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
@@ -269,14 +269,14 @@ export default function TaskForm({ onClose, onSubmit, initialData }) {
                 onChange={(e) => setSaveAsTemplate(e.target.checked)}
                 className="rounded border-slate-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500"
               />
-              <span className="text-slate-600 dark:text-gray-400">💾 Salvar como template</span>
+              <span className="text-slate-600 dark:text-gray-400">💾 Salvar como tarefa modelo</span>
             </label>
             {saveAsTemplate && (
               <input
                 type="text"
                 value={templateName}
                 onChange={(e) => setTemplateName(e.target.value)}
-                placeholder="Nome do template"
+                placeholder="Nome da tarefa modelo"
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
             )}
