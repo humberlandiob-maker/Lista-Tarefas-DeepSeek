@@ -85,7 +85,7 @@ export default function TaskForm({ onClose, onSubmit, initialData }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative bg-white dark:bg-gray-800 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl p-6 shadow-xl">
+      <div className="relative bg-white dark:bg-gray-800 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-slate-800 dark:text-gray-100">
             {initialData ? 'Editar Tarefa' : 'Nova Tarefa'}
