@@ -33,6 +33,13 @@ export default function AnalisesPage() {
   const { completedToday } = usePomodoro()
   const { user } = useAuth()
   const [pomodoroWeek, setPomodoroWeek] = useState([])
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     if (!user) return
@@ -149,9 +156,9 @@ export default function AnalisesPage() {
 
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-5">
           <h2 className="text-sm font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-4">Tarefas por Prioridade</h2>
-          <ResponsiveContainer width="100%" height={260}>
-            <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
-              <Pie data={priorityData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={renderPieLabel} labelLine>
+          <ResponsiveContainer width="100%" height={isMobile ? 300 : 260}>
+            <PieChart margin={{ top: 20, right: 40, bottom: 20, left: 40 }} style={{ overflow: 'visible' }}>
+              <Pie data={priorityData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={isMobile ? 65 : 90} label={renderPieLabel} labelLine>
                 {priorityData.map((entry, i) => (
                   <Cell key={i} fill={entry.color} />
                 ))}
