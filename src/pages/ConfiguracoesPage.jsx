@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useTasks } from '../context/TaskContext'
 import * as settingsService from '../services/settings'
 import * as categoriesService from '../services/categories'
 import * as tagsService from '../services/tags'
 import * as templatesService from '../services/templates'
-import { Bell, Timer, Target, Save, Plus, Pencil, Trash2, X, Check, AlertTriangle, Tag, FileText } from 'lucide-react'
+import * as storage from '../services/storage'
+import { formatDateTime } from '../utils/helpers'
+import { Bell, Timer, Target, Save, Plus, Pencil, Trash2, X, Check, AlertTriangle, Tag, FileText, Undo2 } from 'lucide-react'
 import DeleteAccountModal from '../components/DeleteAccountModal'
 
 const PRESET_COLORS = ['#3B82F6', '#22C55E', '#A855F7', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4', '#84CC16']
 
 export default function ConfiguracoesPage() {
   const { user, displayName } = useAuth()
+  const { restoreTask } = useTasks()
   const [settings, setSettings] = useState(settingsService.getSettings())
   const [saved, setSaved] = useState(false)
+  const [activeTab, setActiveTab] = useState('geral')
+  const [trashTasks, setTrashTasks] = useState([])
 
   const [categories, setCategories] = useState([])
   const [editingId, setEditingId] = useState(null)
@@ -61,6 +67,10 @@ export default function ConfiguracoesPage() {
   }
 
   useEffect(() => { loadCategories(); loadTags(); loadTemplates() }, [user])
+
+  useEffect(() => {
+    if (activeTab === 'lixeira') loadTrash()
+  }, [activeTab, user])
 
   async function handleCreate() {
     if (!newName.trim() || !user) return
@@ -155,10 +165,53 @@ export default function ConfiguracoesPage() {
     setTimeout(() => setSaved(false), 2000)
   }
 
+  async function loadTrash() {
+    if (!user) return
+    await storage.cleanupTrash(user.id)
+    const data = await storage.getTrashTasks(user.id)
+    setTrashTasks(data)
+  }
+
+  async function handleRestoreFromTrash(taskId) {
+    await restoreTask(taskId)
+    loadTrash()
+  }
+
+  async function handlePermanentDelete(taskId) {
+    if (!confirm('Excluir permanentemente esta tarefa?')) return
+    await storage.permanentlyDeleteTask(taskId)
+    loadTrash()
+  }
+
+  async function handleEmptyTrash() {
+    if (!confirm('Tem certeza? Todas as tarefas na lixeira serão excluídas permanentemente.')) return
+    for (const t of trashTasks) {
+      await storage.permanentlyDeleteTask(t.id)
+    }
+    setTrashTasks([])
+  }
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
       <h1 className="text-xl font-semibold text-slate-800 dark:text-gray-100">Configurações</h1>
 
+      <div className="flex gap-2 mb-2">
+        <button
+          onClick={() => setActiveTab('geral')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'geral' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-600'}`}
+        >
+          ⚙️ Geral
+        </button>
+        <button
+          onClick={() => setActiveTab('lixeira')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'lixeira' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-600'}`}
+        >
+          🗑️ Lixeira
+        </button>
+      </div>
+
+      {activeTab === 'geral' ? (
+      <>
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-6 space-y-6">
         <div>
           <h2 className="text-sm font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-4">Perfil</h2>
@@ -561,6 +614,60 @@ export default function ConfiguracoesPage() {
 
       {showDeleteModal && (
         <DeleteAccountModal onClose={() => setShowDeleteModal(false)} />
+      )}
+      </>
+      ) : (
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Lixeira</h2>
+          {trashTasks.length > 0 && (
+            <button
+              onClick={handleEmptyTrash}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs font-medium hover:bg-red-600 transition-colors"
+            >
+              Esvaziar lixeira
+            </button>
+          )}
+        </div>
+
+        {trashTasks.length === 0 ? (
+          <p className="text-sm text-slate-400 dark:text-gray-500 text-center py-8">Lixeira vazia</p>
+        ) : (
+          <div className="space-y-2">
+            {trashTasks.map((t) => {
+              const deletedDate = new Date(t.deletedAt)
+              const expiresDate = new Date(deletedDate.getTime() + 30 * 24 * 60 * 60 * 1000)
+              const daysLeft = Math.ceil((expiresDate - Date.now()) / (24 * 60 * 60 * 1000))
+              return (
+                <div key={t.id} className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-gray-700 rounded-xl">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-700 dark:text-gray-300 truncate">
+                      {t.title}
+                      {t.parentId && <span className="ml-2 text-xs text-slate-400 dark:text-gray-500">(subtarefa)</span>}
+                    </p>
+                    <p className="text-xs text-slate-400 dark:text-gray-500">
+                      Excluída em {formatDateTime(t.deletedAt?.slice(0, 10), null)} &middot;{' '}
+                      {daysLeft > 0 ? `${daysLeft} dias restantes` : 'Expirada'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleRestoreFromTrash(t.id)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-blue-500 text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors"
+                  >
+                    <Undo2 className="w-4 h-4" /> Restaurar
+                  </button>
+                  <button
+                    onClick={() => handlePermanentDelete(t.id)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-red-500 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" /> Excluir
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
       )}
     </div>
   )

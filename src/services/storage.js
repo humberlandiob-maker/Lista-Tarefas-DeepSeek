@@ -7,6 +7,7 @@ export async function getTasks(userId) {
     .from(TABLE)
     .select('*')
     .eq('user_id', userId)
+    .is('deleted_at', null)
     .order('position', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
 
@@ -160,14 +161,99 @@ export async function reorderTasks(orderedIds) {
   return true
 }
 
-export async function deleteTask(id) {
+export async function softDeleteTask(id) {
+  const now = new Date().toISOString()
+  const { error } = await supabase
+    .from(TABLE)
+    .update({ deleted_at: now })
+    .or(`id.eq.${id},parent_id.eq.${id}`)
+
+  if (error) {
+    console.error('Failed to soft delete task:', error)
+    return false
+  }
+
+  return true
+}
+
+export async function restoreTask(id) {
+  const { error } = await supabase
+    .from(TABLE)
+    .update({ deleted_at: null })
+    .or(`id.eq.${id},parent_id.eq.${id}`)
+
+  if (error) {
+    console.error('Failed to restore task:', error)
+    return false
+  }
+
+  return true
+}
+
+export async function getTrashTasks(userId) {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('*')
+    .eq('user_id', userId)
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false })
+
+  if (error) {
+    console.error('Failed to fetch trash:', error)
+    return []
+  }
+
+  if (data.length === 0) return []
+
+  const taskIds = data.map((t) => t.id)
+
+  const [taskTagsResult, tagsResult] = await Promise.all([
+    supabase.from(TAG_TABLE).select('*').in('task_id', taskIds),
+    supabase.from('tags').select('*').eq('user_id', userId),
+  ])
+
+  const tagMap = {}
+  if (!tagsResult.error) {
+    for (const tag of tagsResult.data) {
+      tagMap[tag.id] = { id: tag.id, name: tag.name, color: tag.color }
+    }
+  }
+
+  const taskTagMap = {}
+  if (!taskTagsResult.error) {
+    for (const tt of taskTagsResult.data) {
+      if (!taskTagMap[tt.task_id]) taskTagMap[tt.task_id] = []
+      if (tagMap[tt.tag_id]) taskTagMap[tt.task_id].push(tagMap[tt.tag_id])
+    }
+  }
+
+  return data.map((task) => ({ ...transformTask(task, taskTagMap[task.id] || []), deletedAt: task.deleted_at }))
+}
+
+export async function cleanupTrash(userId) {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  const { error } = await supabase
+    .from(TABLE)
+    .delete()
+    .eq('user_id', userId)
+    .lt('deleted_at', thirtyDaysAgo)
+
+  if (error) {
+    console.error('Failed to cleanup trash:', error)
+    return false
+  }
+
+  return true
+}
+
+export async function permanentlyDeleteTask(id) {
   const { error } = await supabase
     .from(TABLE)
     .delete()
     .eq('id', id)
 
   if (error) {
-    console.error('Failed to delete task:', error)
+    console.error('Failed to permanently delete task:', error)
     return false
   }
 

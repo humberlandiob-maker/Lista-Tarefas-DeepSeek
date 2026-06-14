@@ -141,15 +141,19 @@ export function TaskProvider({ children }) {
 
   const deleteTask = useCallback(async (id) => {
     const childIds = tasks.filter((t) => t.parentId === id).map((t) => t.id)
-    const ok = await storage.deleteTask(id)
+    const ok = await storage.softDeleteTask(id)
     if (ok) {
-      if (childIds.length > 0) {
-        dispatch({ type: ACTIONS.DELETE_MANY, payload: [id, ...childIds] })
-      } else {
-        dispatch({ type: ACTIONS.DELETE, payload: id })
-      }
+      dispatch({ type: ACTIONS.DELETE_MANY, payload: [id, ...childIds] })
     }
   }, [tasks])
+
+  const restoreTask = useCallback(async (id) => {
+    const ok = await storage.restoreTask(id)
+    if (ok && user) {
+      const data = await storage.getTasks(user.id)
+      dispatch({ type: ACTIONS.SET, payload: data })
+    }
+  }, [user])
 
   const reorderTasks = useCallback(async (reordered) => {
     dispatch({ type: ACTIONS.REORDER, payload: reordered })
@@ -158,7 +162,7 @@ export function TaskProvider({ children }) {
   }, [])
 
   return (
-    <TaskContext.Provider value={{ tasks, addTask, toggleTask, toggleRemind, editTask, deleteTask, reorderTasks }}>
+    <TaskContext.Provider value={{ tasks, addTask, toggleTask, toggleRemind, editTask, deleteTask, reorderTasks, restoreTask }}>
       {children}
     </TaskContext.Provider>
   )
