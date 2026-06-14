@@ -29,6 +29,7 @@ Aplicação web moderna e responsiva de gerenciamento de tarefas (To-Do List) co
 
 | Tipo | Descrição |
 |------|-----------|
+| 🗑️ Adicionado | **Lixeira**: soft delete com 30 dias de retenção, aba em Configurações com restaurar/excluir/esvaziar |
 | ✨ Adicionado | **Dias úteis (seg-sex)**: nova opção de repetição que avança apenas em dias úteis, pulando sábados e domingos |
 | ✨ Adicionado | **Filtro "Sem Data"**: novo filtro na FilterBar + badge "Sem prazo" no TaskCard + card "Sem Prazo" no Dashboard substituindo "Foco Hoje" |
 | 🔧 Melhorado | **Agrupamento por categoria**: lista de tarefas agrupada por categoria com cabeçalhos coloridos, pendentes primeiro, concluídas depois |
@@ -92,7 +93,10 @@ app_build/                          # Projeto ativo (produção)
 ├── vite.config.js                  # Configuração Vite + React plugin
 ├── tailwind.config.js              # Configuração Tailwind (fonte Inter)
 ├── postcss.config.js               # Configuração PostCSS
-├── supabase_schema.sql             # Schema SQL do Supabase
+├── supabase_schema.sql             # Schema SQL do Supabase (inicial)
+├── migrations/
+│   ├── 001_initial.sql              # Schema inicial (mesmo que supabase_schema.sql)
+│   └── 002_add_deleted_at.sql       # Coluna deleted_at + índice para lixeira
 │
 ├── public/
 │   ├── manifest.json               # Manifest PWA (nome, ícones, tema)
@@ -237,7 +241,7 @@ app_build/                          # Projeto ativo (produção)
 | **Tarefas** | `/tarefas` | Lista completa com filtros unificados, busca, agrupamento por categoria, botão "Nova Tarefa", "Tarefa Modelo", tags, subtarefas, TaskDetailModal |
 | **Análises** | `/analises` | Gráfico semanal de barras, produtividade por categoria, prioridade (barras horizontais), **pomodoros por dia** (BarChart), stat de pomodoros |
 | **Calendário** | `/calendario` | Grade mensal com indicadores, navegação entre meses, clique no dia |
-| **Configurações** | `/configuracoes` | Perfil, meta diária, notificações, **durações do Pomodoro** (foco/pausa curta/pausa longa/ciclos), CRUD de categorias, **CRUD de tags** (nome + 8 cores), zona de perigo |
+| **Configurações** | `/configuracoes` | Aba Geral (Perfil, meta diária, notificações, durações do Pomodoro, categorias, tags, tarefas modelo, zona de perigo) + aba **Lixeira** (soft delete com 30 dias, restaurar/excluir/esvaziar) |
 
 ### Análises e Gráficos (Recharts)
 - Gráfico de barras semanal (7 dias)
@@ -361,6 +365,7 @@ Todas as rotas (exceto `/login`) são envolvidas pelo componente `ProtectedRoute
 | `parent_id` | `BIGINT REFERENCES tasks ON DELETE CASCADE` | ID da tarefa pai (subtarefas) |
 | `position` | `INT` | Ordem de exibição (drag-and-drop) |
 | `user_id` | `UUID REFERENCES auth.users` | Dono da tarefa |
+| `deleted_at` | `TIMESTAMPTZ` | Data da exclusão (lixeira); `NULL` = tarefa ativa |
 | `created_at` | `TIMESTAMPTZ DEFAULT NOW()` | Data de criação |
 
 #### Tabela `profiles`
@@ -559,7 +564,7 @@ Para autenticação, o `AuthContext.jsx` gerencia sessão do Supabase Auth e exp
 | Serviço | Arquivo | Linhas | Função |
 |---------|---------|--------|--------|
 | `supabaseClient` | `services/supabaseClient.js` | 6 | Cria e exporta cliente Supabase |
-| `storage` | `services/storage.js` | 120+ | CRUD de tarefas + tags no Supabase (getTasks com JOIN tags, addTask/updateTask com tagIds) |
+| `storage` | `services/storage.js` | 190+ | CRUD de tarefas + tags no Supabase (getTasks com JOIN tags, softDeleteTask, restoreTask, getTrashTasks, cleanupTrash, permanentlyDeleteTask) |
 | `profile` | `services/profile.js` | 29 | Busca e criação de perfil do usuário |
 | `settings` | `services/settings.js` | 25+ | Leitura/gravação no localStorage (dailyGoal, notifications, theme, pomodoro durations) |
 | `gamification` | `services/gamification.js` | 80+ | Lógica de streak, conquistas (inclui "100 Pomodoros"), produtividade, totalPomodoros |
@@ -690,6 +695,7 @@ O aplicativo é uma **Progressive Web App**:
 | **Horário nas datas** | ❌ | ✅ Coluna due_time + input time + formatDateTime |
 | **Hábitos** | ❌ | ✅ habits + habit_logs, página dedicada, widget, conquistas |
 | **Tarefas Modelo** | ❌ | ✅ Salvar/usar tarefas modelo, CRUD em Configurações, botões no Dashboard/Detalhes |
+| **Lixeira / Soft Delete** | ❌ | ✅ Soft delete + restore + auto-cleanup 30 dias + aba em Configurações |
 
 ---
 
@@ -728,6 +734,7 @@ O aplicativo é uma **Progressive Web App**:
 | Hábitos | ~2h | ~8h |
 | Tarefas Modelo | ~2h | ~8h |
 | Horário nas datas | ~1h | ~4h |
+| Lixeira / Soft Delete | ~30min | ~4h |
 | Refinamentos + README | ~2h | ~8h |
 | **Total** | **~34h** | **~128h** |
 
