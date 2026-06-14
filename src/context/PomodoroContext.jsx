@@ -6,7 +6,7 @@ import { incrementPomodoros } from '../services/gamification'
 
 const PomodoroContext = createContext(null)
 
-function playBeep() {
+export function playBeep() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)()
     const osc = ctx.createOscillator()

@@ -11,8 +11,10 @@ import CalendarioPage from './pages/CalendarioPage'
 import ConfiguracoesPage from './pages/ConfiguracoesPage'
 import HabitsPage from './pages/HabitsPage'
 import { useTheme } from './hooks/useTheme'
+import useReminderTimer from './hooks/useReminderTimer'
 
 function ProtectedLayout({ children }) {
+  useReminderTimer()
   return (
     <ProtectedRoute>
       <div className="flex">
