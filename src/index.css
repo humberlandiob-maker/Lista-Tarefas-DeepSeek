@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-50 text-slate-800 font-sans antialiased;
+}
+
+.dark body {
+  @apply bg-gray-950 text-gray-100;
+}
+
+.custom-checkbox {
+  @apply w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center cursor-pointer transition-all duration-200 flex-shrink-0;
+}
+
+.custom-checkbox:hover {
+  @apply border-blue-400;
+}
+
+.custom-checkbox.checked {
+  @apply bg-green-500 border-green-500;
+}
+
+.task-card-enter {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
